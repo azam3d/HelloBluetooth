@@ -13,6 +13,7 @@
 		C567628924A8C6910016B71C /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = C567628724A8C6910016B71C /* Main.storyboard */; };
 		C567628B24A8C69A0016B71C /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C567628A24A8C69A0016B71C /* Assets.xcassets */; };
 		C567628E24A8C69A0016B71C /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = C567628C24A8C69A0016B71C /* LaunchScreen.storyboard */; };
+		C56762AC24C042D30016B71C /* Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = C56762AB24C042D30016B71C /* Extensions.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -24,6 +25,7 @@
 		C567628A24A8C69A0016B71C /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		C567628D24A8C69A0016B71C /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		C567628F24A8C69A0016B71C /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		C56762AB24C042D30016B71C /* Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Extensions.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -58,6 +60,7 @@
 			children = (
 				C567628124A8C6910016B71C /* AppDelegate.swift */,
 				C567628324A8C6910016B71C /* SceneDelegate.swift */,
+				C56762AB24C042D30016B71C /* Extensions.swift */,
 				C567628524A8C6910016B71C /* ViewController.swift */,
 				C567628724A8C6910016B71C /* Main.storyboard */,
 				C567628A24A8C69A0016B71C /* Assets.xcassets */,
@@ -141,6 +144,7 @@
 				C567628624A8C6910016B71C /* ViewController.swift in Sources */,
 				C567628224A8C6910016B71C /* AppDelegate.swift in Sources */,
 				C567628424A8C6910016B71C /* SceneDelegate.swift in Sources */,
+				C56762AC24C042D30016B71C /* Extensions.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
