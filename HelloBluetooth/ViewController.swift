@@ -1,13 +1,18 @@
 
+import AVFoundation
 import CoreBluetooth
 import UIKit
 
 class ViewController: UIViewController {
+    
+    var session: AVCaptureSession?
+    var previewLayer: AVCaptureVideoPreviewLayer?
 
     private var centralManager: CBCentralManager!
     private var myPeripheral: CBPeripheral!
     var targetService: CBService?
     var writableCharacteristic: CBCharacteristic?
+    var isConnected = false
     
     @IBOutlet weak var sendTextField: UITextField!
     
@@ -15,6 +20,46 @@ class ViewController: UIViewController {
         super.viewDidLoad()
         
         centralManager = CBCentralManager(delegate: self, queue: nil)
+        
+        setupSession()
+        session?.startRunning()
+        
+        let tap = UITapGestureRecognizer(target: self, action: #selector(viewTapped))
+        view.addGestureRecognizer(tap)
+    }
+    
+    @objc private func viewTapped() {
+        view.endEditing(true)
+    }
+    
+    func setupSession() {
+        session = AVCaptureSession()
+        guard let camera = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .front), let session = session else {
+            fatalError("No front video camera available")
+        }
+        do {
+            let cameraInput = try AVCaptureDeviceInput(device: camera)
+            if session.canAddInput(cameraInput) {
+                session.addInput(cameraInput)
+            }
+        } catch {
+            fatalError(error.localizedDescription)
+        }
+        // Create the video data output
+//        let videoOutput = AVCaptureVideoDataOutput()
+//        videoOutput.setSampleBufferDelegate(self, queue: dataOutputQueue)
+//        videoOutput.videoSettings = [kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32BGRA]
+//
+//        // Add the video output to the capture session
+//        session.addOutput(videoOutput)
+//
+//        let videoConnection = videoOutput.connection(with: .video)
+//        videoConnection?.videoOrientation = .portrait
+        
+        previewLayer = AVCaptureVideoPreviewLayer(session: session)
+        previewLayer?.videoGravity = .resizeAspectFill
+        previewLayer?.frame = view.bounds
+        view.layer.insertSublayer(previewLayer!, at: 0)
     }
 
     @IBAction func sendData(_ sender: Any) {
@@ -23,7 +68,18 @@ class ViewController: UIViewController {
         }
     }
     
-    func writeValue(data: String){
+    @IBAction func connectBluetooth(_ sender: Any) {
+        if isConnected {
+            centralManager.cancelPeripheralConnection(myPeripheral)
+            print("Disconnected")
+        } else {
+            centralManager.connect(myPeripheral, options: nil)
+            print("Connected")
+        }
+        isConnected = !isConnected
+    }
+    
+    private func writeValue(data: String){
         let data = data.data(using: .utf8)
         
         guard let characteristic = writableCharacteristic else {
@@ -52,6 +108,8 @@ extension ViewController: CBCentralManagerDelegate {
                 myPeripheral = peripheral
                 myPeripheral.delegate = self
                 centralManager.connect(peripheral, options: nil)
+                
+                print("Bluetooth connected \(pname)")
             }
         }
     }
@@ -66,7 +124,6 @@ extension ViewController: CBPeripheralDelegate {
         guard let services = peripheral.services else {
             return
         }
-
         targetService = services.first
         if let service = services.first {
             targetService = service
@@ -78,7 +135,6 @@ extension ViewController: CBPeripheralDelegate {
         guard let characteristics = service.characteristics else {
             return
         }
-
         for characteristic in characteristics {
             if characteristic.properties.contains(.write) || characteristic.properties.contains(.writeWithoutResponse) {
                 writableCharacteristic = characteristic

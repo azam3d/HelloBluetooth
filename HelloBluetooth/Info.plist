@@ -62,5 +62,7 @@
 	</array>
 	<key>NSBluetoothAlwaysUsageDescription</key>
 	<string>Need Bluetooth connection</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Need camera</string>
 </dict>
 </plist>
