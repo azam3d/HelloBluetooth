@@ -1,12 +1,26 @@
 
 import AVFoundation
 import CoreBluetooth
+import Photos
 import UIKit
 
 class ViewController: UIViewController {
     
     var session: AVCaptureSession?
     var previewLayer: AVCaptureVideoPreviewLayer?
+    
+    var videoConnection : AVCaptureConnection?
+    var photoOutput: AVCapturePhotoOutput?
+    var photoCaptureCompletionBlock: ((UIImage?, Error?) -> Void)?
+    
+    enum CameraControllerError: Swift.Error {
+        case captureSessionAlreadyRunning
+        case captureSessionIsMissing
+        case inputsAreInvalid
+        case invalidOperation
+        case noCamerasAvailable
+        case unknown
+    }
 
     private var centralManager: CBCentralManager!
     private var myPeripheral: CBPeripheral!
@@ -45,26 +59,34 @@ class ViewController: UIViewController {
         } catch {
             fatalError(error.localizedDescription)
         }
-        // Create the video data output
-//        let videoOutput = AVCaptureVideoDataOutput()
-//        videoOutput.setSampleBufferDelegate(self, queue: dataOutputQueue)
-//        videoOutput.videoSettings = [kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32BGRA]
-//
-//        // Add the video output to the capture session
-//        session.addOutput(videoOutput)
-//
-//        let videoConnection = videoOutput.connection(with: .video)
-//        videoConnection?.videoOrientation = .portrait
-        
         previewLayer = AVCaptureVideoPreviewLayer(session: session)
         previewLayer?.videoGravity = .resizeAspectFill
         previewLayer?.frame = view.bounds
         view.layer.insertSublayer(previewLayer!, at: 0)
+        
+        session.sessionPreset = AVCaptureSession.Preset.photo
+        
+        photoOutput = AVCapturePhotoOutput()
+        photoOutput!.setPreparedPhotoSettingsArray([AVCapturePhotoSettings(format: [AVVideoCodecKey : AVVideoCodecType.jpeg])], completionHandler: nil)
+        
+        if session.canAddOutput(photoOutput!) {
+            session.addOutput(photoOutput!)
+        }
+        session.startRunning()
     }
 
     @IBAction func sendData(_ sender: Any) {
         if let text = sendTextField.text {
             writeValue(data: text)
+        }
+        captureImage { image, error in
+            guard let image = image else {
+                print(error ?? "Image capture error")
+                return
+            }
+            try? PHPhotoLibrary.shared().performChangesAndWait {
+                PHAssetChangeRequest.creationRequestForAsset(from: image)
+            }
         }
     }
     
@@ -86,6 +108,18 @@ class ViewController: UIViewController {
             return
         }
         myPeripheral.writeValue(data!, for: characteristic, type: .withoutResponse)
+    }
+    
+    private func captureImage(completion: @escaping (UIImage?, Error?) -> Void) {
+        guard let session = session, session.isRunning else {
+            completion(nil, CameraControllerError.captureSessionIsMissing)
+            return
+        }
+        let settings = AVCapturePhotoSettings()
+        settings.flashMode = .off
+     
+        photoOutput?.capturePhoto(with: settings, delegate: self)
+        photoCaptureCompletionBlock = completion
     }
     
 }
@@ -146,9 +180,32 @@ extension ViewController: CBPeripheralDelegate {
     func peripheral(_ peripheral: CBPeripheral, didUpdateValueFor characteristic: CBCharacteristic, error: Error?) {
         let dataString = String(data: characteristic.value!, encoding: String.Encoding.utf8)
         
-        if let dataString = dataString {
-            navigationItem.title = dataString
-            print(dataString)
+        if let dataString = dataString?.trimmingCharacters(in: .whitespacesAndNewlines)  {
+            print("dataString: \(dataString)")
+            
+            if dataString == "shoot" {
+                captureImage { image, error in
+                    guard let image = image else {
+                        print(error ?? "Image capture error")
+                        return
+                    }
+                    try? PHPhotoLibrary.shared().performChangesAndWait {
+                        PHAssetChangeRequest.creationRequestForAsset(from: image)
+                    }
+                }
+            }
+        }
+    }
+}
+
+extension ViewController: AVCapturePhotoCaptureDelegate {
+    func photoOutput(_ output: AVCapturePhotoOutput, didFinishProcessingPhoto photo: AVCapturePhoto, error: Error?) {
+        let imageData = photo.fileDataRepresentation()
+        
+        if let data = imageData, let image = UIImage(data: data) {
+            photoCaptureCompletionBlock?(image, nil)
+        } else {
+            photoCaptureCompletionBlock?(nil, CameraControllerError.unknown)
         }
     }
 }

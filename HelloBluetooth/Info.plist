@@ -64,5 +64,7 @@
 	<string>Need Bluetooth connection</string>
 	<key>NSCameraUsageDescription</key>
 	<string>Need camera</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Needs Photo Library</string>
 </dict>
 </plist>
