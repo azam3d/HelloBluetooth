@@ -4,6 +4,15 @@ import CoreBluetooth
 import Photos
 import UIKit
 
+enum CameraControllerError: Swift.Error {
+    case captureSessionAlreadyRunning
+    case captureSessionIsMissing
+    case inputsAreInvalid
+    case invalidOperation
+    case noCamerasAvailable
+    case unknown
+}
+
 class ViewController: UIViewController {
     
     var session: AVCaptureSession?
@@ -13,28 +22,27 @@ class ViewController: UIViewController {
     var photoOutput: AVCapturePhotoOutput?
     var photoCaptureCompletionBlock: ((UIImage?, Error?) -> Void)?
     
-    enum CameraControllerError: Swift.Error {
-        case captureSessionAlreadyRunning
-        case captureSessionIsMissing
-        case inputsAreInvalid
-        case invalidOperation
-        case noCamerasAvailable
-        case unknown
-    }
-
-    private var centralManager: CBCentralManager!
-    private var myPeripheral: CBPeripheral!
-    var targetService: CBService?
-    var writableCharacteristic: CBCharacteristic?
-    var isConnected = false
+    var bluetoothManager: BluetoothManager!
     
     @IBOutlet weak var sendTextField: UITextField!
+    @IBOutlet weak var connect: UIButton!
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        centralManager = CBCentralManager(delegate: self, queue: nil)
+        bluetoothManager = BluetoothManager(bluetoothName: "Revo")
         
+        bluetoothManager.completion = { [self] in
+            captureImage { image, error in
+                guard let image = image else {
+                    print(error ?? "Image capture error")
+                    return
+                }
+                try? PHPhotoLibrary.shared().performChangesAndWait {
+                    PHAssetChangeRequest.creationRequestForAsset(from: image)
+                }
+            }
+        }
         setupSession()
         session?.startRunning()
         
@@ -60,7 +68,7 @@ class ViewController: UIViewController {
             fatalError(error.localizedDescription)
         }
         previewLayer = AVCaptureVideoPreviewLayer(session: session)
-        previewLayer?.videoGravity = .resizeAspectFill
+        previewLayer?.videoGravity = .resizeAspect
         previewLayer?.frame = view.bounds
         view.layer.insertSublayer(previewLayer!, at: 0)
         
@@ -77,37 +85,18 @@ class ViewController: UIViewController {
 
     @IBAction func sendData(_ sender: Any) {
         if let text = sendTextField.text {
-            writeValue(data: text)
-        }
-        captureImage { image, error in
-            guard let image = image else {
-                print(error ?? "Image capture error")
-                return
-            }
-            try? PHPhotoLibrary.shared().performChangesAndWait {
-                PHAssetChangeRequest.creationRequestForAsset(from: image)
-            }
+            bluetoothManager.writeValue(data: text)
         }
     }
     
     @IBAction func connectBluetooth(_ sender: Any) {
-        if isConnected {
-            centralManager.cancelPeripheralConnection(myPeripheral)
-            print("Disconnected")
-        } else {
-            centralManager.connect(myPeripheral, options: nil)
-            print("Connected")
-        }
-        isConnected = !isConnected
-    }
-    
-    private func writeValue(data: String){
-        let data = data.data(using: .utf8)
+        bluetoothManager.switchBluetooth()
         
-        guard let characteristic = writableCharacteristic else {
-            return
+        if bluetoothManager.isConnected {
+            connect.setTitle("Disconnect", for: .normal)
+        } else {
+            connect.setTitle("Connect", for: .normal)
         }
-        myPeripheral.writeValue(data!, for: characteristic, type: .withoutResponse)
     }
     
     private func captureImage(completion: @escaping (UIImage?, Error?) -> Void) {
@@ -122,80 +111,6 @@ class ViewController: UIViewController {
         photoCaptureCompletionBlock = completion
     }
     
-}
-
-extension ViewController: CBCentralManagerDelegate {
-    func centralManagerDidUpdateState(_ central: CBCentralManager) {
-        if central.state == CBManagerState.poweredOn {
-            print("Bluetooth ON")
-            central.scanForPeripherals(withServices: nil, options: nil)
-        } else {
-            print("Bluetooth switched off or not initialized")
-        }
-    }
-    
-    func centralManager(_ central: CBCentralManager, didDiscover peripheral: CBPeripheral, advertisementData: [String : Any], rssi RSSI: NSNumber) {
-        if let pname = peripheral.name {
-            if pname == "Revo" {
-                centralManager.stopScan()
-                
-                myPeripheral = peripheral
-                myPeripheral.delegate = self
-                centralManager.connect(peripheral, options: nil)
-                
-                print("Bluetooth connected \(pname)")
-            }
-        }
-    }
-    
-    func centralManager(_ central: CBCentralManager, didConnect peripheral: CBPeripheral) {
-        myPeripheral.discoverServices(nil)
-    }
-}
-
-extension ViewController: CBPeripheralDelegate {
-    func peripheral(_ peripheral: CBPeripheral, didDiscoverServices error: Error?) {
-        guard let services = peripheral.services else {
-            return
-        }
-        targetService = services.first
-        if let service = services.first {
-            targetService = service
-            peripheral.discoverCharacteristics(nil, for: service)
-        }
-    }
-    
-    func peripheral(_ peripheral: CBPeripheral, didDiscoverCharacteristicsFor service: CBService, error: Error?) {
-        guard let characteristics = service.characteristics else {
-            return
-        }
-        for characteristic in characteristics {
-            if characteristic.properties.contains(.write) || characteristic.properties.contains(.writeWithoutResponse) {
-                writableCharacteristic = characteristic
-            }
-            peripheral.setNotifyValue(true, for: characteristic)
-        }
-    }
-    
-    func peripheral(_ peripheral: CBPeripheral, didUpdateValueFor characteristic: CBCharacteristic, error: Error?) {
-        let dataString = String(data: characteristic.value!, encoding: String.Encoding.utf8)
-        
-        if let dataString = dataString?.trimmingCharacters(in: .whitespacesAndNewlines)  {
-            print("dataString: \(dataString)")
-            
-            if dataString == "shoot" {
-                captureImage { image, error in
-                    guard let image = image else {
-                        print(error ?? "Image capture error")
-                        return
-                    }
-                    try? PHPhotoLibrary.shared().performChangesAndWait {
-                        PHAssetChangeRequest.creationRequestForAsset(from: image)
-                    }
-                }
-            }
-        }
-    }
 }
 
 extension ViewController: AVCapturePhotoCaptureDelegate {

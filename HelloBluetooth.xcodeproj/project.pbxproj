@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		C52D32F52523A0D7006DB842 /* BluetoothManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = C52D32F42523A0D7006DB842 /* BluetoothManager.swift */; };
 		C567628224A8C6910016B71C /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = C567628124A8C6910016B71C /* AppDelegate.swift */; };
 		C567628424A8C6910016B71C /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = C567628324A8C6910016B71C /* SceneDelegate.swift */; };
 		C567628624A8C6910016B71C /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C567628524A8C6910016B71C /* ViewController.swift */; };
@@ -17,6 +18,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		C52D32F42523A0D7006DB842 /* BluetoothManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BluetoothManager.swift; sourceTree = "<group>"; };
 		C567627E24A8C6910016B71C /* HelloBluetooth.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = HelloBluetooth.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		C567628124A8C6910016B71C /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		C567628324A8C6910016B71C /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
@@ -62,6 +64,7 @@
 				C567628324A8C6910016B71C /* SceneDelegate.swift */,
 				C56762AB24C042D30016B71C /* Extensions.swift */,
 				C567628524A8C6910016B71C /* ViewController.swift */,
+				C52D32F42523A0D7006DB842 /* BluetoothManager.swift */,
 				C567628724A8C6910016B71C /* Main.storyboard */,
 				C567628A24A8C69A0016B71C /* Assets.xcassets */,
 				C567628C24A8C69A0016B71C /* LaunchScreen.storyboard */,
@@ -145,6 +148,7 @@
 				C567628224A8C6910016B71C /* AppDelegate.swift in Sources */,
 				C567628424A8C6910016B71C /* SceneDelegate.swift in Sources */,
 				C56762AC24C042D30016B71C /* Extensions.swift in Sources */,
+				C52D32F52523A0D7006DB842 /* BluetoothManager.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

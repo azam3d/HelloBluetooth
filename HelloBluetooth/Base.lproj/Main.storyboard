@@ -35,8 +35,8 @@
                                 </connections>
                             </button>
                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="mKK-hx-iGo">
-                                <rect key="frame" x="345" y="812" width="59" height="30"/>
-                                <state key="normal" title="Connect"/>
+                                <rect key="frame" x="326" y="812" width="78" height="30"/>
+                                <state key="normal" title="Disconnect"/>
                                 <connections>
                                     <action selector="connectBluetooth:" destination="BYZ-38-t0r" eventType="touchUpInside" id="Xsx-qH-VDI"/>
                                 </connections>
@@ -54,6 +54,7 @@
                         </constraints>
                     </view>
                     <connections>
+                        <outlet property="connect" destination="mKK-hx-iGo" id="dr2-j4-GoS"/>
                         <outlet property="sendTextField" destination="YBm-oK-rvz" id="Lre-BH-C9Y"/>
                     </connections>
                 </viewController>
